@@ -45,6 +45,10 @@ const CodePlayground = ({ theme, templateKey }) => {
         plugins: ['transform-modules-umd']
       }).code;
 
+      // Extract component name from the code using regex
+      const componentNameMatch = code.match(/function\s+(\w+)\s*\(/);
+      const componentName = componentNameMatch ? componentNameMatch[1] : 'MyComponent';
+
       // Create a function that returns the component
       // eslint-disable-next-line no-new-func
       const componentFunction = new Function(
@@ -55,17 +59,23 @@ const CodePlayground = ({ theme, templateKey }) => {
         'useMemo',
         `
         ${transformed}
-        return MyComponent;
+        return typeof ${componentName} !== 'undefined' ? ${componentName} : null;
         `
       );
 
-      return componentFunction(
+      const component = componentFunction(
         React,
         React.useState,
         React.useEffect,
         React.useCallback,
         React.useMemo
       );
+
+      if (!component) {
+        throw new Error(`Component '${componentName}' is not defined. Make sure your component function is properly declared.`);
+      }
+
+      return component;
     } catch (err) {
       setError(err.message);
       return null;

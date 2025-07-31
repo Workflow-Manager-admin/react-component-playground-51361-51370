@@ -22,7 +22,7 @@ export const defaultTemplate = `function MyComponent({ name = "World", count = 0
 }`;
 
 // PUBLIC_INTERFACE
-export const hooksTemplate = `function CounterComponent({ initialCount = 0 }) {
+export const hooksTemplate = `function MyComponent({ initialCount = 0 }) {
   const [count, setCount] = useState(initialCount);
   const [message, setMessage] = useState('');
 
@@ -72,7 +72,7 @@ export const hooksTemplate = `function CounterComponent({ initialCount = 0 }) {
 }`;
 
 // PUBLIC_INTERFACE
-export const formTemplate = `function FormComponent({ title = "Contact Form" }) {
+export const formTemplate = `function MyComponent({ title = "Contact Form" }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
