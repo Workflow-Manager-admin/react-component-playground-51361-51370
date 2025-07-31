@@ -40,16 +40,35 @@ const CodePlayground = ({ theme, templateKey }) => {
   // PUBLIC_INTERFACE
   const compiledComponent = useMemo(() => {
     try {
-      const transformed = Babel.transform(code, {
-        presets: ['react'],
-        plugins: ['transform-modules-umd']
+      const cleanCode = code.trim();
+      
+      if (!cleanCode) {
+        throw new Error('No code provided');
+      }
+
+      // Transform the code with Babel
+      const transformed = Babel.transform(cleanCode, {
+        presets: ['react']
       }).code;
 
-      // Extract component name from the code using regex
-      const componentNameMatch = code.match(/function\s+(\w+)\s*\(/);
-      const componentName = componentNameMatch ? componentNameMatch[1] : 'MyComponent';
+      // Extract component name - support multiple patterns
+      let componentName = 'MyComponent';
+      const patterns = [
+        /function\s+(\w+)\s*\(/,
+        /const\s+(\w+)\s*=/,
+        /let\s+(\w+)\s*=/,
+        /var\s+(\w+)\s*=/
+      ];
+      
+      for (const pattern of patterns) {
+        const match = cleanCode.match(pattern);
+        if (match && match[1]) {
+          componentName = match[1];
+          break;
+        }
+      }
 
-      // Create a function that returns the component
+      // Create a function that evaluates the component code in a proper context
       // eslint-disable-next-line no-new-func
       const componentFunction = new Function(
         'React', 
@@ -59,7 +78,13 @@ const CodePlayground = ({ theme, templateKey }) => {
         'useMemo',
         `
         ${transformed}
-        return typeof ${componentName} !== 'undefined' ? ${componentName} : null;
+        
+        // Return the component if it exists
+        if (typeof ${componentName} !== 'undefined') {
+          return ${componentName};
+        }
+        
+        return null;
         `
       );
 
@@ -77,6 +102,7 @@ const CodePlayground = ({ theme, templateKey }) => {
 
       return component;
     } catch (err) {
+      console.error('Component compilation error:', err);
       setError(err.message);
       return null;
     }
